@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ryan’s Workout Log</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root{
+  --blue:#2f80ed;
+  --green:#27ae60;
+  --bg:#f5f9fc;
+  --card:#ffffff;
+  --text:#1f2937;
+}
+*{
+  box-sizing:border-box;
+  font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial;
+}
+body{margin:0;background:var(--bg);color:var(--text);}
+header{
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  color:white;
+  padding:22px 16px;
+  text-align:center;
+}
+header h1{
+  margin:0;
+  font-weight:700;
+  letter-spacing:-0.5px;
+}
+main{max-width:900px;margin:0 auto;padding:16px;}
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 6px 16px rgba(0,0,0,0.06);
+}
+h2{
+  margin-top:0;
+  font-weight:600;
+}
+input,select,button{
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  font-size:16px;
+}
+input[type=number]{text-align:center;}
+button{
+  background:var(--blue);
+  color:white;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+}
+button.secondary{background:var(--green);}
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+.row > *{flex:1;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:14px;}
+th{color:#374151;font-weight:600;}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>Ryan’s Workout Log</h1>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Weekly Plan</h2>
+    <div class="row">
+      <select id="day">
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+        <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+      </select>
+      <input id="plan" placeholder="Leg Day / Chest Day / Rest"/>
+      <button class="secondary" onclick="savePlan()">Save</button>
+    </div>
+    <table id="planTable"></table>
+  </div>
+
+  <div class="card">
+    <h2>Log Workout</h2>
+    <div class="row">
+      <input id="exercise" list="exerciseList" placeholder="Exercise"/>
+      <datalist id="exerciseList"></datalist>
+      <input id="sets" type="number" min="0" placeholder="Sets"/>
+      <input id="reps" type="number" min="0" placeholder="Reps"/>
+      <input id="weight" type="number" min="0" placeholder="Weight"/>
+      <input id="time" type="number" min="0" placeholder="Time (min)"/>
+    </div>
+    <button style="margin-top:12px" onclick="logWorkout()">Add Entry</button>
+    <table id="logTable"></table>
+  </div>
+</main>
+
+<script>
+const planKey="weeklyPlan";
+const logKey="workoutLog";
+const exerciseKey="exerciseList";
+
+function savePlan(){
+  const data=JSON.parse(localStorage.getItem(planKey)||"{}");
+  if(!plan.value) return;
+  data[day.value]=plan.value;
+  localStorage.setItem(planKey,JSON.stringify(data));
+  plan.value="";
+  renderPlan();
+}
+
+function renderPlan(){
+  const data=JSON.parse(localStorage.getItem(planKey)||"{}");
+  planTable.innerHTML="<tr><th>Day</th><th>Plan</th></tr>";
+  Object.keys(data).forEach(d=>{
+    planTable.innerHTML+=`<tr><td>${d}</td><td>${data[d]}</td></tr>`;
+  });
+}
+
+function logWorkout(){
+  if(!exercise.value) return;
+  saveExercise(exercise.value);
+  const entry={
+    date:new Date().toLocaleDateString(),
+    exercise:exercise.value,
+    sets:sets.value,
+    reps:reps.value,
+    weight:weight.value,
+    time:time.value
+  };
+  const data=JSON.parse(localStorage.getItem(logKey)||"[]");
+  data.unshift(entry);
+  localStorage.setItem(logKey,JSON.stringify(data));
+  exercise.value=sets.value=reps.value=weight.value=time.value="";
+  renderLog();
+}
+
+function renderLog(){
+  const data=JSON.parse(localStorage.getItem(logKey)||"[]");
+  logTable.innerHTML="<tr><th>Date</th><th>Exercise</th><th>Sets</th><th>Reps</th><th>Weight</th><th>Time</th></tr>";
+  data.forEach(e=>{
+    logTable.innerHTML+=`<tr>
+      <td>${e.date}</td><td>${e.exercise}</td>
+      <td>${e.sets}</td><td>${e.reps}</td>
+      <td>${e.weight}</td><td>${e.time}</td>
+    </tr>`;
+  });
+}
+
+function saveExercise(name){
+  const list=JSON.parse(localStorage.getItem(exerciseKey)||"[]");
+  if(!list.includes(name)){
+    list.push(name);
+    localStorage.setItem(exerciseKey,JSON.stringify(list));
+  }
+  renderExerciseList();
+}
+
+function renderExerciseList(){
+  const list=JSON.parse(localStorage.getItem(exerciseKey)||"[]");
+  exerciseList.innerHTML="";
+  list.forEach(e=>{
+    exerciseList.innerHTML+=`<option value="${e}">`;
+  });
+}
+
+renderPlan();
+renderLog();
+renderExerciseList();
+</script>
+</body>
+</html>
